@@ -1,3 +1,3 @@
 # Multithreading
 
-Study project for deep learning multithreading.
+Study project for deep understanding multithreading.
