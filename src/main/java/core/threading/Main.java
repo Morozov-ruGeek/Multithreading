@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Aleksey Morozov
@@ -23,24 +24,31 @@ public class Main {
     private static final int COUNT_THREADS = 15;
     private static final int MIN_COUNT_ACCOUNTS = 1;
 
+    private static final ExecutorService threads = Executors.newFixedThreadPool(COUNT_THREADS);
+
     public static void main(String[] args) {
         List<Account> accounts = new ArrayList<>(COUNT_ACCOUNTS);
         fillAccountList(accounts);
 
-        ExecutorService threads = Executors.newFixedThreadPool(COUNT_THREADS);
-
         CustomLogger logger = new CustomLoggerImpl();
         logger.logging(String.format("Total cash before transaction cycle %d", totalCash(accounts)));
         int countOfCycle = 0;
-        while (countOfCycle <= 100){
+        while (countOfCycle <= 100) {
             int transactionCash = ThreadLocalRandom.current().nextInt(10, CASH_FOR_ACCOUNT);
             Account acc1 = getRandomAccountForTransaction(accounts);
             Account acc2 = getRandomAccountForTransaction(accounts);
-            TransactionManagement tm = new TransactionManagementImpl(acc1, acc2, transactionCash, logger);
-            threads.execute(tm);
-            countOfCycle++;
+            if (acc1.getId() != acc2.getId()) {
+                TransactionManagement tm = new TransactionManagementImpl(acc1, acc2, transactionCash, logger);
+                threads.execute(tm);
+                countOfCycle++;
+            }
         }
-        threads.shutdown();
+        try {
+            stop();
+        } catch (InterruptedException e) {
+            logger.logging(e.getMessage());
+        }
+        logger.logging(String.format("Total cash after transaction cycle %d", totalCash(accounts)));
     }
 
     private static void fillAccountList(List<Account> accounts) {
@@ -51,13 +59,21 @@ public class Main {
         }
     }
 
-    private static int totalCash(List<Account> accounts){
+    private static int totalCash(List<Account> accounts) {
         return accounts.stream()
                 .mapToInt(Account::getCash)
                 .sum();
     }
 
-    private static Account getRandomAccountForTransaction(List<Account> entities){
-        return entities.get(ThreadLocalRandom.current().nextInt(MIN_COUNT_ACCOUNTS, COUNT_ACCOUNTS + MIN_COUNT_ACCOUNTS));
+    private static Account getRandomAccountForTransaction(List<Account> entities) {
+        return entities.get(ThreadLocalRandom.current().nextInt(MIN_COUNT_ACCOUNTS, COUNT_ACCOUNTS));
+    }
+
+    private static void stop() throws InterruptedException {
+        if (!threads.isTerminated()) {
+            threads.awaitTermination(5, TimeUnit.SECONDS);
+        } else{
+            threads.shutdown();
+        }
     }
 }
