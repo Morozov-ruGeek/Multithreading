@@ -51,7 +51,6 @@ public class Main {
         }
         accounts.forEach(System.out::println);
         logger.logging(String.format("Total cash after transaction cycle %d", totalCash(accounts)));
-        System.exit(0);
     }
 
     private static void fillAccountList(List<Account> accounts) {
@@ -73,9 +72,10 @@ public class Main {
     }
 
     private static void stop() throws InterruptedException {
-        if (!threads.isTerminated()) {
-            threads.awaitTermination(5, TimeUnit.SECONDS);
+        if (threads.isTerminated()) {
+            threads.shutdown();
         } else{
+            threads.awaitTermination(5, TimeUnit.SECONDS);
             threads.shutdown();
         }
     }
