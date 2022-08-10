@@ -32,6 +32,7 @@ public class Main {
 
         CustomLogger logger = new CustomLoggerImpl();
         logger.logging(String.format("Total cash before transaction cycle %d", totalCash(accounts)));
+        accounts.forEach(System.out::println);
         int countOfCycle = 0;
         while (countOfCycle <= 100) {
             int transactionCash = ThreadLocalRandom.current().nextInt(10, CASH_FOR_ACCOUNT);
@@ -48,7 +49,9 @@ public class Main {
         } catch (InterruptedException e) {
             logger.logging(e.getMessage());
         }
+        accounts.forEach(System.out::println);
         logger.logging(String.format("Total cash after transaction cycle %d", totalCash(accounts)));
+        System.exit(0);
     }
 
     private static void fillAccountList(List<Account> accounts) {
